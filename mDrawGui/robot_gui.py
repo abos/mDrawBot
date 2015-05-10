@@ -20,8 +20,12 @@ import SvgConverter
 import HexDownloader
 import sys
 import urllib2
+import logging
 
 robotVersion="1.06 2015-5-08"
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -49,6 +53,7 @@ class WorkInThread(threading.Thread):
 class MainUI(QtGui.QWidget):
     sceneUpdateSig = pyqtSignal()
     robotSig = pyqtSignal(str)
+
     def __init__(self):
         super(MainUI, self).__init__()
         self.pic = None
@@ -84,6 +89,8 @@ class MainUI(QtGui.QWidget):
         
 
     def initUI(self):
+        logger.info("initUI")
+
         self.ui = Ui_Form()
         self.ui.setupUi(self)
         # get sys serial port and update combo box
@@ -164,11 +171,15 @@ class MainUI(QtGui.QWidget):
         self.htmlThread.start()
         
     def sceneRefresh(self):
+        logger.info("sceneRefresh")
+
         while True:
             self.sceneUpdateSig.emit()
             time.sleep(0.05)
             
     def parseRobotSig(self,msg):
+        logger.info("parseRobotSig: msg <%s>", msg)
+
         msg=str(msg)
         if "pg" in msg:
             tmp = msg.split()
@@ -194,6 +205,8 @@ class MainUI(QtGui.QWidget):
             self.dbg(msg)
 
     def commRx(self,msg):
+        logger.info("commRx: msg <%s>", msg)
+
         try:
             if "OK" in msg:
                 self.robot.robotState = IDLE
@@ -220,18 +233,26 @@ class MainUI(QtGui.QWidget):
             pass
     
     def sendCmd(self,cmd=""):
+        logger.info("sendCmd: cmd: <%s>", cmd)
+
         if self.comm == None: return
         if cmd==False:
             cmd = str(self.ui.lineSend.text())+'\n'
         self.comm.send(cmd)
     
     def robotGoHome(self):
+        logger.info("robotGoHome")
+
         self.robot.G28()
     
     def getRobotConfig(self):
+        logger.info("getRobotConfig")
+
         self.robot.M10()
             
     def refreshCom(self):
+        logger.info("refreshCom")
+
         self.commList = {}
         self.ui.portCombo.clear()
         serPorts = SerialCom.serialList()
@@ -247,13 +268,18 @@ class MainUI(QtGui.QWidget):
     def refreshDone(self,msg):
         ""
         self.dbg(msg)
+
         if "fail" not in msg:
             self.commList[msg]="WIFI"
             self.ui.portCombo.addItem(msg)
             
     def disconnectPort(self):
+        logger.info("disconnectPort")
+
         if self.comm==None:
+            logger.debug("disconnectPort: do nothing, comm is None")
             return
+
         self.comm.close()
         self.ui.btnConnect.clicked.connect(self.connectPort)
         self.ui.btnConnect.clicked.disconnect(self.disconnectPort)
@@ -263,14 +289,30 @@ class MainUI(QtGui.QWidget):
         return
     
     def connectPort(self):
+        logger.info("connectPort")
+
         port = str(self.ui.portCombo.currentText())
+
+        logger.debug("connectPort: given port <%s>", port)
+        if not port:
+            logger.debug("connectPort: no port given")
+            return
+
         try:
             if self.commList[port] == "COM":
+                logger.debug("connectPort: commList is COM")
+
                 self.serial.connect(port)
                 self.comm = self.serial
             elif self.commList[port] == "WIFI":
+                logger.debug("connectPort: commList is WIFI")
+
                 self.socket.connect(port)
                 self.comm = self.socket
+            else:
+                logger.debug("connectPort: cannot handle <%s>", self.commList[port])
+                return
+
             self.ui.btnConnect.clicked.connect(self.disconnectPort)
             self.ui.btnConnect.clicked.disconnect(self.connectPort)
             self.ui.btnConnect.setText("Disconnect")
@@ -278,7 +320,8 @@ class MainUI(QtGui.QWidget):
             threading.Timer(2, self.getRobotConfig).start() # wait for bootloader finished on arduino
             self.robotState = IDLE
         except Exception as e:
-            self.dbg(e,-3)
+            logging.exception(e)
+            self.dbg(e, -3)
             raise Exception(e)
         
     def initGraphView(self):
@@ -296,8 +339,11 @@ class MainUI(QtGui.QWidget):
         self.robot.setPos(cent)
     
     def tabChanged(self,tabindex):
+        logger.info("tabChanged: tabindex %s", tabindex)
+
         #print "tab changed",tabindex
         ssTemplate = "background-color: rgb(247, 247, 247);border-image: url(:/images/model.png);"
+
         if tabindex==0:
             self.robot = ScaraRobot.Scara(self.scene, self.ui)
             self.ui.labelModel.setStyleSheet(ssTemplate.replace("model", "scara"))
@@ -313,6 +359,7 @@ class MainUI(QtGui.QWidget):
         elif tabindex==3:
             self.robot = CarRobot.CarBot(self.scene,self.ui)
             self.ui.labelModel.setStyleSheet(ssTemplate.replace("model", "car"))
+
         # connect robot delegate
         self.robot.sendCmd = self.sendCmd
         self.robot.robotSig = self.robotSig
@@ -321,8 +368,18 @@ class MainUI(QtGui.QWidget):
         self.robot.initRobotCanvas()
         self.robot.parseEcho(self.bufferedM10msg)
         self.bufferedM10msg = ""
-        
+
+
     def dbg(self,log,level=DEBUG_NORMAL):
+        """
+        print debug message into textConsole field
+        :param log:
+        :param level: debug level will result in different colors
+        :return:
+        """
+
+        logger.info("dbg: log <%s>", log)
+
         if level == DEBUG_ERR:
             dbgstr="<font color=red>%s</font>" %str(log)
             self.ui.textConsole.append(dbgstr)
@@ -334,14 +391,21 @@ class MainUI(QtGui.QWidget):
             self.ui.textConsole.append(dbgstr)
             
     def loadPic(self,filename=False):
+        logger.info("loadPic: filename <%s>", filename)
+
         self.clearPic()
         if filename==False:
             filename = str(QtGui.QFileDialog.getOpenFileName(self, 'Open Svg/Bmp', '', ".svg;.bmp(*.svg;*.bmp)").toUtf8())
         self.dbg(filename)
         if len(filename)==0:
             return
-        filetype =filename.split(".")[-1] 
+
+        filetype =filename.split(".")[-1]
+        logger.debug("loadPic: filetype is <%s>", filetype)
+
         if filetype=="svg":
+            logger.debug("loadPic: handle svg")
+
             self.pic = SvgParser.SvgParser(filename,self.scene)
             self.ui.labelPic.setVisible(True)
             self.picX0 = 300
@@ -350,13 +414,18 @@ class MainUI(QtGui.QWidget):
             self.picHeight = 150
             self.updatePic()
         elif filetype=="bmp":
+            logger.debug("loadPic: handle bmp")
+
             self.showConverter(filename)
 
     def showConverter(self,bmpPath):
+        logger.info("showConverter: bmpPath <%s>", bmpPath)
         self.converter = SvgConverter.SvgConverter(ParserGUI.Ui_Form,bmpPath,self.robotSig)
         
 
     def clearPic(self):
+        logger.info("clearPic")
+
         if self.pic == None: return
         if self.ptrPicRect!=None:
             for path in self.pic.ptrList:
@@ -370,6 +439,8 @@ class MainUI(QtGui.QWidget):
         self.ptrPicRez = None        
         
     def updatePic(self):
+        logger.info("updatePic")
+
         x = self.picX0
         y = self.picY0
         w = self.picWidth
@@ -400,6 +471,8 @@ class MainUI(QtGui.QWidget):
         self.pic.plotToScene()
         
     def robotPrint(self):
+        logger.info("robotPrint")
+
         if not self.robot.printing:
             self.ui.progressBar.setValue(0)
             self.robot.printPic()
@@ -415,12 +488,16 @@ class MainUI(QtGui.QWidget):
                 self.switchPrintButton("Pause")
             
     def robotStop(self):
+        logger.info("robotStop")
+
         if self.robot.printing:
             self.robot.stopPrinting()
             self.ui.progressBar.setVisible(False)
             self.switchPrintButton("Go")
     
     def switchPrintButton(self,s):
+        logger.info("switchPrintButton: <%s>", s)
+
         if s=="Go":
             self.ui.btnPrintPic.setStyleSheet(_fromUtf8(" QPushButton {\n"
 "    border-image:url(:/images/scara-UI-Start-normal.png) 0;\n"
