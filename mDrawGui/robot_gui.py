@@ -176,6 +176,8 @@ class MainUI(QtGui.QWidget):
         while True:
             self.sceneUpdateSig.emit()
             time.sleep(0.05)
+
+        logger.debug("sceneRefresh: finished")
             
     def parseRobotSig(self,msg):
         logger.info("parseRobotSig: msg <%s>", msg)
@@ -205,15 +207,26 @@ class MainUI(QtGui.QWidget):
             self.dbg(msg)
 
     def commRx(self,msg):
+        """
+        Handle received message from robot and update UI
+        :param msg: message from robot
+        :return:
+        """
         logger.info("commRx: msg <%s>", msg)
 
         try:
             if "OK" in msg:
+                logger.debug("commRx: handle OK")
                 self.robot.robotState = IDLE
                 self.robot.q.put(1)
+
             elif "M" in msg:
+                logger.debug("commRx: handle M")
+
                 self.dbg(msg,DEBUG_DEBUG)
                 if "M10" in msg:
+                    logger.debug("commRx: handle M10")
+
                     if "MSCARA" in msg and str(self.ui.robotCombo.currentText())!="mScara":
                         self.ui.robotCombo.setCurrentIndex(0)
                     elif "MSPIDER" in msg and str(self.ui.robotCombo.currentText())!="mSpider":
@@ -224,9 +237,11 @@ class MainUI(QtGui.QWidget):
                         self.ui.robotCombo.setCurrentIndex(2)
                     elif "MCAR" in msg and str(self.ui.robotCombo.currentText())!="mCar":
                         self.ui.robotCombo.setCurrentIndex(3)
+
                     self.bufferedM10msg = msg
                     self.robot.parseEcho(msg)
                 elif "M11" in msg:
+                    logger.debug("commRx: handle M11")
                     self.robot.parseEcho(msg)
         except:
             """todo: may screw if we connect to a wrong serial port"""
@@ -325,6 +340,8 @@ class MainUI(QtGui.QWidget):
             raise Exception(e)
         
     def initGraphView(self):
+        logger.info("initGraphView")
+
         scene = self.ui.graphicsView.scene()
         # remove graph reference first
         self.ptrPicRect = None
@@ -334,12 +351,15 @@ class MainUI(QtGui.QWidget):
         cent = QPointF(rc.width()/2,rc.height()/2+100)
         self.robotCent = cent
         self.robot.robotCent =(cent.x(),cent.y())
-        print "rc",cent
+
+        logger.debug("initGraphView: rc <%s>", cent)
+        #print "rc",cent
+
         scene.addItem(self.robot)
         self.robot.setPos(cent)
     
     def tabChanged(self,tabindex):
-        logger.info("tabChanged: tabindex %s", tabindex)
+        logger.info("tabChanged: tabindex <%s>", tabindex)
 
         #print "tab changed",tabindex
         ssTemplate = "background-color: rgb(247, 247, 247);border-image: url(:/images/model.png);"
@@ -415,7 +435,6 @@ class MainUI(QtGui.QWidget):
             self.updatePic()
         elif filetype=="bmp":
             logger.debug("loadPic: handle bmp")
-
             self.showConverter(filename)
 
     def showConverter(self,bmpPath):
@@ -757,6 +776,9 @@ def getPkgPath(name):
 if __name__ == '__main__':
     #sys.stdout = open("stdout.log", "w")
     #sys.stderr = open("stderr.log", "w")
+
+    logger.info("start application")
+
     try:
         print sys._MEIPASS
     except:
