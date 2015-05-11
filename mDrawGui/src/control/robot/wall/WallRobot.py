@@ -1,13 +1,12 @@
 import threading
 import Queue
 import time
-from PyQt4 import QtGui
 from math import *
 
 from PyQt4.QtCore import *
 
-from ScaraGui import *
-import SpiderSetup
+from presentation.scara.ScaraGui import *
+from presentation.spider.SpiderSetup import *
 
 
 IDLE = 0

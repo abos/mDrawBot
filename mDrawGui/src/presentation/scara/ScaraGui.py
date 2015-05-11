@@ -858,4 +858,3 @@ class Ui_Form(object):
         self.label_5.setText(_translate("Form", "width", None))
         self.label_6.setText(_translate("Form", "height", None))
 
-import images_rc

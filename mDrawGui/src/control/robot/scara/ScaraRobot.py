@@ -1,12 +1,10 @@
 import Queue
-from PyQt4 import QtGui
 from math import *
 
-from PyQt4.QtCore import *
-
 from robot_gui import *
-from ScaraGui import *
-import ScaraSetup
+
+from presentation.scara.ScaraGui import *
+from presentation.scara import ScaraSetup
 
 
 motorSelectedStyle = "border: 1px solid rgb(67,67,67);\r\nborder-radius: 4px;\r\n"

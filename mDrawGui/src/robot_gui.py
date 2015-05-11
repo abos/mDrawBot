@@ -8,17 +8,17 @@ import logging
 
 from PyQt4.QtCore import *
 
-from control.connection import SerialCom, SocketCom
-from ScaraGui import *
-import SvgParser
-import ParserGUI
-import ScaraRobot
-import WallRobot
-import XYRobot
-import CarRobot
-import EggBot
+from presentation.scara.ScaraGui import *
+from presentation import ParserGUI
 import SvgConverter
-import HexDownloader
+from control.connection import SerialCom, SocketCom
+from control.hex import HexDownloader
+from control.robot.car import CarRobot
+from control.robot.egg import EggBot
+from control.robot.scara import ScaraRobot
+from control.robot.wall import WallRobot
+from control.robot.xy import XYRobot
+from control.svg import SvgParser
 
 
 robotVersion="1.06 2015-5-08"

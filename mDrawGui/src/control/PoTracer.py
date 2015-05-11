@@ -1,11 +1,5 @@
-import sys
-import os
 import threading
-from PyQt4 import QtGui
-from PyQt4.QtCore import *
-import threading
-import subprocess
-import ParserGUI
+
 
 class WorkInThread(threading.Thread):
     def __init__(self, target, *args):

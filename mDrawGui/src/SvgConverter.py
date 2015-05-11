@@ -1,17 +1,14 @@
 #-*-encoding:utf-8-*-
-import sys
 import os
 import threading
-import Queue
-import time
-import robot_gui
-from ScaraGui import *
 from PyQt4 import QtGui
-from PyQt4.QtCore import *
-from math import *
-import ParserGUI
 import subprocess
 import platform
+
+from PyQt4.QtCore import *
+
+import robot_gui
+
 
 class WorkInThread(threading.Thread):
     def __init__(self, target, *args):

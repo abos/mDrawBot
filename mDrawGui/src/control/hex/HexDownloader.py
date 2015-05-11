@@ -1,12 +1,9 @@
-import sys
 import os
-import threading
-from PyQt4 import QtGui
-from PyQt4.QtCore import *
-import robot_gui
 import threading
 import subprocess
 import platform
+
+import robot_gui
 
 
 class WorkInThread(threading.Thread):

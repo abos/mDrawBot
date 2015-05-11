@@ -1,12 +1,11 @@
 import Queue
-from PyQt4 import QtGui
 from math import *
 
-from PyQt4.QtCore import *
-
 from robot_gui import *
-from ScaraGui import *
-import EggSetup
+#from presentation.egg import EggSetup
+
+from presentation.scara.ScaraGui import *
+from presentation.egg import EggSetup
 
 
 IDLE = 0
