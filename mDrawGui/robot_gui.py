@@ -72,6 +72,12 @@ class MainUI(QtGui.QWidget):
         self.initSetting()
         
     def initSetting(self):
+        """
+        Read the persisted settings for penUp and penDown and updates the UI. Use hardcoded default settings.
+        :return:
+        """
+        logger.info("initSetting")
+
         self.settings = QtCore.QSettings("Makeblock","mDraw")
         penUpPos=self.settings.value("penUpPos",130).toInt()[0]
         penDownPos=self.settings.value("penDownPos",90).toInt()[0]
@@ -79,6 +85,12 @@ class MainUI(QtGui.QWidget):
         self.ui.linePenDown.setText("M1 %d" %(penDownPos))
         
     def updateSetting(self):
+        """
+        persist the current settings for penUp and penDown
+        :return:
+        """
+        logger.info("updateSetting")
+
         try:
             penUpPos = int(str(self.ui.linePenUp.text()).split(" ")[1])
             penDownPos = int(str(self.ui.linePenDown.text()).split(" ")[1])
