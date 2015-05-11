@@ -128,7 +128,7 @@ class XYBot(QtGui.QGraphicsItem, AbstractRobotGui):
         :param position: absolute position in canvas
         :return:
         """
-        logger.info("moveTo <%s>", position)
+        logger.info("moveTo <%s> from relative <%s, %s>", position, self.robotModel.x, self.robotModel.y)
 
         relativeX = position.x() - self.origin[0]
         relativeY = self.robotModel.height - (position.y() - self.origin[1])
@@ -213,6 +213,13 @@ class XYBot(QtGui.QGraphicsItem, AbstractRobotGui):
     #     return (x,y)
 
     def _simulateMovement(self, dx, dy, absolute=False):
+        """
+
+        :param dx: relative destination
+        :param dy: relative destination
+        :param absolute:
+        :return:
+        """
         logger.info("simulateMovement")
 
         if self.moving and self.moveThread:
@@ -225,9 +232,12 @@ class XYBot(QtGui.QGraphicsItem, AbstractRobotGui):
         # if pos == None:
         #     return
 
-        maxD = max(abs(dx), abs(dy)) * 0.5
+        xDistance = abs(dx - self.robotModel.x)
+        yDistance = abs(dy - self.robotModel.y)
+
+        maxD = max(xDistance, yDistance) * 0.5
         maxStep = ceil(maxD)
-        deltaStep = (abs(dx / maxStep), abs(dy / maxStep))
+        deltaStep = (xDistance / maxStep, yDistance / maxStep)
         logger.debug("maxD <%s>, <%s>, <%s>, ", maxD, maxStep, deltaStep)
 
         self.moving = True
