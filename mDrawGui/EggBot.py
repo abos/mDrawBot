@@ -1,14 +1,13 @@
-import sys
-import SerialCom
-import threading
 import Queue
-import time
+from PyQt4 import QtGui
+from math import *
+
+from PyQt4.QtCore import *
+
 from robot_gui import *
 from ScaraGui import *
-from PyQt4 import QtGui
-from PyQt4.QtCore import *
-from math import *
 import EggSetup
+
 
 IDLE = 0
 BUSYING = 1

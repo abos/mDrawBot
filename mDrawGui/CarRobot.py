@@ -1,13 +1,14 @@
-import sys
-import SerialCom
 import threading
 import Queue
 import time
-from ScaraGui import *
 from PyQt4 import QtGui
-from PyQt4.QtCore import *
 from math import *
+
+from PyQt4.QtCore import *
+
+from ScaraGui import *
 import CarSetup
+
 
 IDLE = 0
 BUSYING = 1

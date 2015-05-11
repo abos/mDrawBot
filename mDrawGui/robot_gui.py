@@ -1,16 +1,17 @@
 #-*-encoding:utf-8-*-
-import sys
 import os
-import SerialCom
-import SocketCom
 import threading
-from ScaraGui import *
-from PyQt4 import QtGui
+import time
+import sys
+import urllib2
+import logging
+
 from PyQt4.QtCore import *
+
+from control.connection import SerialCom, SocketCom
+from ScaraGui import *
 import SvgParser
 import ParserGUI
-import time
-import math
 import ScaraRobot
 import WallRobot
 import XYRobot
@@ -18,9 +19,7 @@ import CarRobot
 import EggBot
 import SvgConverter
 import HexDownloader
-import sys
-import urllib2
-import logging
+
 
 robotVersion="1.06 2015-5-08"
 
