@@ -6,6 +6,8 @@ import sys
 import urllib2
 import logging
 
+import images_rc
+
 from PyQt4.QtCore import *
 
 from presentation.scara.ScaraGui import *
@@ -37,6 +39,7 @@ DEBUG_DEBUG = -2
 DEBUG_ERR = -3
 IDLE = 0
 BUSYING = 1
+
 def millis():
     return int(round(time.time() * 1000))
 

@@ -6,8 +6,14 @@ from robot_gui import *
 from presentation.scara.ScaraGui import *
 from presentation.scara import ScaraSetup
 
-
 motorSelectedStyle = "border: 1px solid rgb(67,67,67);\r\nborder-radius: 4px;\r\n"
+logger = logging.getLogger(__name__)
+
+DEBUG_NORMAL = 0
+DEBUG_DEBUG = -2
+DEBUG_ERR = -3
+IDLE = 0
+BUSYING = 1
 
 def getDegree(theta):
     ang=(theta[0]/pi*180,theta[1]/pi*180)
@@ -34,6 +40,9 @@ if __name__ == '__main__':
 class RobotSetupUI(QtGui.QWidget):
     def __init__(self,uidialog,robot):
         super(RobotSetupUI, self).__init__()
+
+        logger.info("__init__")
+
         self.ui = uidialog()
         self.ui.setupUi(self)
         self.robot = robot
