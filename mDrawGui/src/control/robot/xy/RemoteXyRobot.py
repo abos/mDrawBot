@@ -117,7 +117,7 @@ class RemoteXyRobot:
         self.remoteAdapter.sendCmd(cmd)
 
 
-    def M10(self):  # read robot arm setup and init pos
+    def readRobotConfig(self):  # read robot arm setup and init pos
         cmd = "M10\n"
         self.remoteAdapter.sendCmd(cmd)
 

@@ -4,6 +4,7 @@ __author__ = 'abos'
 
 logger = logging.getLogger(__name__)
 
+
 class RemoteAdapter:
     def __init__(self):
         self.listener = None

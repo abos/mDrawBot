@@ -154,8 +154,10 @@ class XYBot(QtGui.QGraphicsItem):
         if "M10" in msg:
             tmp = msg.split()
             if tmp[1]!="XY": return
+
             self.width = float(tmp[2])
             self.height = float(tmp[3])
+
             if tmp[6]=="A0":
                 self.motoADir = 0
             else:

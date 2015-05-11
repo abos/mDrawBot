@@ -45,7 +45,7 @@ class XyRobotLogic:
 
 
     def moveOverList(self, remoteRobot):
-        if self.moveList == None: return
+        if self.moveList is None: return
 
         moveLen = len(self.moveList)
         moveCnt = 0
