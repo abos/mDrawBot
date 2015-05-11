@@ -5,7 +5,6 @@ from math import *
 
 from PyQt4.QtCore import *
 
-from presentation.scara.ScaraGui import *
 from presentation.spider.SpiderSetup import *
 
 
@@ -64,7 +63,7 @@ class RobotSetupUI(QtGui.QWidget):
     def setMotorAcck(self,event):
         self.robot.motoADir = 1
         self.updateUI()
-        
+
     def setMotorBck(self,event):
         self.robot.motoBDir = 0
         self.updateUI()
@@ -78,12 +77,12 @@ class WorkInThread(threading.Thread):
         self._target = target
         self._args = args
         threading.Thread.__init__(self)
- 
+
     def run(self):
         self._target(*self._args)
 
 class WallRobot(QtGui.QGraphicsItem):
-    
+
     def __init__(self, scene, ui, parent=None):
         super(WallRobot, self).__init__(parent)
         self.robotState = IDLE
@@ -111,10 +110,10 @@ class WallRobot(QtGui.QGraphicsItem):
         self.lasty = 9999
         self.ui.label.setText("X(mm)")
         self.ui.label_2.setText("Y(mm)")
-        
+
     def boundingRect(self):
         return  QRectF(0,0,100,100)
-    
+
     def initRobotCanvas(self):
         self.hang0 = (-self.width/2*self.scaler,-self.height*self.scaler)
         self.hang1 = (self.width/2*self.scaler,-self.height*self.scaler)
@@ -125,44 +124,44 @@ class WallRobot(QtGui.QGraphicsItem):
         pen.setStyle(Qt.DashDotLine)
         self.pXLine = self.scene.addLine(-500+self.robotCent[0],self.robotCent[1],500+self.robotCent[0],self.robotCent[1],pen=pen)
         self.pYLine = self.scene.addLine(self.robotCent[0],self.robotCent[1]-500,self.robotCent[0],self.robotCent[1]+500,pen=pen)
-        
+
         pTxt = self.scene.addText("O")
         cent = QPointF(self.robotCent[0],self.robotCent[1])
         pTxt.setPos(cent)
         pTxt.setDefaultTextColor(QtCore.Qt.darkGray)
         self.ui.labelScale.setText(str(self.scaler))
-        
+
     def paint(self, painter, option, widget=None):
         painter.setBrush(QtCore.Qt.darkGray)
         painter.setRenderHint(QtGui.QPainter.Antialiasing)
-        
+
         x = self.x*self.scaler
         y = -self.y*self.scaler
-        
+
         pen = QtGui.QPen(QtGui.QColor(124, 124, 124))
         painter.setPen(pen)
         line = QLineF(self.hang0[0],self.hang0[1],x,y)
         painter.drawLine(line)
         line = QLineF(self.hang1[0],self.hang1[1],x,y)
         painter.drawLine(line)
-        
+
         painter.drawEllipse(-5+self.hang0[0],-5+self.hang0[1],10,10)
         painter.drawText(-10+self.hang0[0],self.hang0[1],"A")
         painter.drawEllipse(-5+self.hang1[0],-5+self.hang1[1],10,10)
         painter.drawText(10+self.hang1[0],self.hang1[1],"B")
-        
+
         pen = QtGui.QPen(QtGui.QColor(0, 169, 231))
         painter.setBrush(QtGui.QColor(0, 169, 231))
         painter.setPen(pen)
         painter.drawEllipse(-5+x,-5+y,10,10)
-        
+
         #painter.drawText(x-30,y+10,"(%.2f,%.2f)" %(x,-y))
         if self.x!=self.lastx or self.y!=self.lasty:
             self.ui.labelXpos.setText("%.2f" %(self.x))
             self.ui.labelYpos.setText("%.2f" %(self.y))
             self.lastx = self.x
             self.lasty = self.y
-        
+
     def parseEcho(self,msg):
         if "M10" in msg:
             tmp = msg.split()
@@ -178,7 +177,7 @@ class WallRobot(QtGui.QGraphicsItem):
             else:
                 self.motoBDir = 1
             self.initRobotCanvas()
-    
+
     def prepareMove(self,target,absolute=False):
         if absolute==False:
             target = (target.x()/self.scaler,-target.y()/self.scaler)
@@ -192,18 +191,18 @@ class WallRobot(QtGui.QGraphicsItem):
         self.deltaStep = (dx/maxStep,dy/maxStep)
         self.maxStep = maxStep
         print "move to",target,maxStep
-        
+
     def moveStep(self):
         while True:
             self.x+=self.deltaStep[0]
             self.y+=self.deltaStep[1]
             time.sleep(0.02)
             self.maxStep-=1
-            
+
             if self.maxStep==0 or self.moving==False:
                 self.moving = False
                 break
-    
+
     def moveTo(self,pos,absolute=False):
         if self.moving:
             self.moving = False
@@ -214,7 +213,7 @@ class WallRobot(QtGui.QGraphicsItem):
         self.moveThread = WorkInThread(self.moveStep)
         self.moveThread.setDaemon(True)
         self.moveThread.start()
-    
+
     def M1(self,pos):
         if self.robotState != IDLE: return
         cmd = "M1 %d" %(pos)
@@ -228,7 +227,7 @@ class WallRobot(QtGui.QGraphicsItem):
         cmd = "M5 A%d B%d H%d W%d S%d\n" %(self.motoADir,self.motoBDir,self.height,self.width,self.motorSwitch)
         self.robotState = BUSYING
         self.sendCmd(cmd)
-    
+
 
     def G1(self,x,y,feedrate=0,auxdelay=None):
         if self.robotState != IDLE: return
@@ -239,18 +238,18 @@ class WallRobot(QtGui.QGraphicsItem):
         print cmd
         self.robotState = BUSYING
         self.sendCmd(cmd)
-    
+
     def G28(self):
         if self.robotState != IDLE: return
         cmd = "G28\n"
         self.sendCmd(cmd)
         self.x = 0
         self.y = 0
-        
+
     def M10(self): # read robot arm setup and init pos
         cmd = "M10\n"
         self.sendCmd(cmd)
-    
+
     def moveOverList(self):
         if self.moveList == None: return
         moveLen = len(self.moveList)
@@ -297,14 +296,14 @@ class WallRobot(QtGui.QGraphicsItem):
         self.q.get()
         self.printing = False
         self.robotSig.emit("done")
-    
+
     def printPic(self):
         #update pen servo position
         mStr = str(self.ui.linePenUp.text())
         self.penUpPos = int(mStr.split()[1])
         mStr = str(self.ui.linePenDown.text())
         self.penDownPos = int(mStr.split()[1])
-        
+
         while not self.q.empty():
             self.q.get()
         self.printing = True
@@ -312,14 +311,13 @@ class WallRobot(QtGui.QGraphicsItem):
         self.moveListThread = WorkInThread(self.moveOverList)
         self.moveListThread.setDaemon(True)
         self.moveListThread.start()
-        
+
     def stopPrinting(self):
         self.printing = False
         self.pausing = False
-        
+
     def pausePrinting(self,v):
         self.pausing = v
-        
+
     def showSetup(self):
         self.robotSetup =  RobotSetupUI(SpiderSetup.Ui_Form,self)
-        

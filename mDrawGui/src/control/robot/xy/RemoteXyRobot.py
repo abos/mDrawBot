@@ -1,6 +1,6 @@
 import logging
 from control.EventHook import EventHook
-from control.robot.xy.XyRobotModel import XyRobotModel
+from control.robot.xy.XyRobotModel import XyRobotModel, IDLE, BUSYING
 
 __author__ = 'abos'
 
@@ -10,15 +10,18 @@ logger = logging.getLogger(__name__)
 class RemoteXyRobot:
     """
     Class to control remote robot. No algorithmic logic is involved in this class. This is
-     slim communication adapter.
+    a slim communication adapter only..
     """
 
-    def __init__(self, remoteAdapter):
+    def __init__(self, robotModel):
+        self.remoteAdapter = None
+        self.robotModel = robotModel
+        self.onChangeRobot = EventHook()
+
+
+    def setRemoteAdapter(self, remoteAdapter):
         self.remoteAdapter = remoteAdapter
         self.remoteAdapter.register(self)
-
-        self.robotModel = XyRobotModel()
-        self.onChangeRobot = EventHook()
 
 
     def registerOnChangeRobot(self, listener):
@@ -27,6 +30,17 @@ class RemoteXyRobot:
         self.onChangeRobot += listener
 
 
+    def _sendCmd(self, cmd):
+        if not self.remoteAdapter:
+            logger.debug("_sendCmd: no remote configured")
+            return
+
+        if self.robotModel.state != IDLE:
+            logger.debug("_sendCmd: robot not idle, ignore command ")
+            return
+
+        self.remoteAdapter.sendCmd(cmd)
+
     def goHome(self):
         """
         send robot home
@@ -34,39 +48,15 @@ class RemoteXyRobot:
         """
         logger.info("goHome")
 
-        if self.robotModel.state != IDLE:
-            logger.debug("goHome: robot not idle, ignore command ")
-            return
-
-        self.remoteAdapter.sendCmd("G28\n")
+        self.robotModel.state = BUSYING
+        self._sendCmd("G28\n")
 
         self.robotModel.x = 0
         self.robotModel.y = 0
 
 
-    # def moveTo(self, pos, absolute=False):
-    #     logger.info("moveTo")
-    #
-    #     # if self.moving:
-    #     #            self.moving = False
-    #     #            self.moveThread.join()
-    #
-    #     pos = self.prepareMove(pos, absolute)
-    #
-    #     if pos == None:
-    #         return
-    #
-    #     self.G1(pos[0], pos[1])
-    #     self.moving = True
-    #     self.moveThread = WorkInThread(self.moveStep)
-    #     self.moveThread.setDaemon(True)
-    #     self.moveThread.start()
-
-
     def moveTo(self, x, y, feedrate=0, auxdelay=None):
         logger.info("moveTo")
-
-        if self.robotState != IDLE: return
 
         cmd = "G1 X%.2f Y%.2f" % (x, y)
 
@@ -74,57 +64,42 @@ class RemoteXyRobot:
             cmd += " A%d" % (auxdelay)
 
         cmd += '\n'
-
-        self.robotModel.state = BUSYING
-        self.remoteAdapter.sendCmd(cmd)
+        self._sendCmd(cmd)
 
 
     def movePen(self, pos):
-        logger.info("M1")
-
-        if self.robotState != IDLE: return
+        logger.info("movePen")
 
         cmd = "M1 %d" % (pos)
         cmd += '\n'
-
-        self.robotModel.state = BUSYING
-        self.remoteAdapter.sendCmd(cmd)
+        self._sendCmd(cmd)
 
 
     def M3(self, auxdelay):  # aux delay
-        if self.robotState != IDLE: return
         cmd = "M3 %d\n" % (auxdelay)
-
-        self.robotModel.state = BUSYING
-        self.remoteAdapter.sendCmd(cmd)
+        self._sendCmd(cmd)
 
 
     def setupLaserPower(self, laserPower, rate=1):
-        if self.robotState != IDLE: return
+        logger.info("setupLaserPower")
         cmd = "M4 %d\n" % (int(laserPower * rate))
-
         self.robotModel.laserPower = laserPower
-
-        self.robotModel.state = BUSYING
-        self.remoteAdapter.sendCmd(cmd)
+        self._sendCmd(cmd)
 
 
     def M5(self):
-        if self.robotState != IDLE: return
         cmd = "M5 A%d B%d H%d W%d\n" % (self.motoADir, self.motoBDir, self.height, self.width)
-
-        self.robotModel.state = BUSYING
-        self.remoteAdapter.sendCmd(cmd)
+        self._sendCmd(cmd)
 
 
     def readRobotConfig(self):  # read robot arm setup and init pos
         cmd = "M10\n"
-        self.remoteAdapter.sendCmd(cmd)
+        self._sendCmd(cmd)
 
 
     def M11(self):  # read end stop value form xy
         cmd = "M11\n"
-        self.remoteAdapter.sendCmd(cmd)
+        self._sendCmd(cmd)
 
 
     def messageReceived(self, msg):

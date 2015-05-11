@@ -2,9 +2,9 @@ import Queue
 from math import *
 
 from robot_gui import *
-
-from presentation.scara.ScaraGui import *
+from presentation.RobotGui import *
 from presentation.scara import ScaraSetup
+
 
 motorSelectedStyle = "border: 1px solid rgb(67,67,67);\r\nborder-radius: 4px;\r\n"
 logger = logging.getLogger(__name__)
@@ -32,11 +32,11 @@ def sliceSegment(x,y,tarX,tarY):
     for i in range(0,maxSteps+1):
         segList.append((x+dxStep*i,y+dyStep*i))
     return segList[1:]
-    
+
 if __name__ == '__main__':
     seg = sliceSegment(0,0,10,20)
     print seg
-    
+
 class RobotSetupUI(QtGui.QWidget):
     def __init__(self,uidialog,robot):
         super(RobotSetupUI, self).__init__()
@@ -54,7 +54,7 @@ class RobotSetupUI(QtGui.QWidget):
         self.ui.motoB_CCK.mousePressEvent = self.setMotorBcck
         self.ui.btnOk.clicked.connect(self.applySetup)
         self.show()
-        
+
     def updateUI(self):
         self.ui.lineArm0.setText(str(self.robot.L1))
         self.ui.lineArm1.setText(str(self.robot.L2))
@@ -85,7 +85,7 @@ class RobotSetupUI(QtGui.QWidget):
     def setMotorAcck(self,event):
         self.robot.motoADir = 1
         self.updateUI()
-        
+
     def setMotorBck(self,event):
         self.robot.motoBDir = 0
         self.updateUI()
@@ -93,13 +93,13 @@ class RobotSetupUI(QtGui.QWidget):
     def setMotorBcck(self,event):
         self.robot.motoBDir = 1
         self.updateUI()
-        
+
 class WorkInThread(threading.Thread):
     def __init__(self, target, *args):
         self._target = target
         self._args = args
         threading.Thread.__init__(self)
- 
+
     def run(self):
         self._target(*self._args)
 
@@ -137,10 +137,10 @@ class Scara(QtGui.QGraphicsItem):
         self.lasty = 0
         self.ui.label.setText("X(mm)")
         self.ui.label_2.setText("Y(mm)")
-        
+
     def boundingRect(self):
         return  QRectF(0,0,100,100)
-        
+
     def initRobotCanvas(self):
         if self.pEllipse0!=None:
             self.scene.removeItem(self.pEllipse0)
@@ -159,12 +159,12 @@ class Scara(QtGui.QGraphicsItem):
     def paint(self, painter, option, widget=None):
         painter.setRenderHint(QtGui.QPainter.Antialiasing)
         (x1,y1,x2,y2) = self.sceraDirectKinect(self.th)
-        
+
         # qt graph in inverse y direction
         y1 = - y1
         y2 = - y2
         ang = getDegree(self.th)
-        
+
         pen = QtGui.QPen(QtGui.QColor(124, 124, 124))
         painter.setBrush(QtCore.Qt.darkGray)
         painter.setPen(pen)
@@ -179,7 +179,7 @@ class Scara(QtGui.QGraphicsItem):
 
         painter.drawEllipse(x1-5,y1-5,10,10)
         painter.drawEllipse(x2-5,y2-5,10,10)
-        
+
         pen = QtGui.QPen(QtGui.QColor(0, 169, 231))
         painter.setBrush(QtGui.QColor(0, 169, 231))
         painter.setPen(pen)
@@ -198,7 +198,7 @@ class Scara(QtGui.QGraphicsItem):
             self.ui.labelYpos.setText("%.2f" %(-y2))
             self.lastx = x2
             self.lasty = y2
-        
+
     def sceraDirectKinect(self,th):
         L1 = self.L1
         L2 = self.L2
@@ -209,7 +209,7 @@ class Scara(QtGui.QGraphicsItem):
         x2 = -L1*cos(th1)-L2*cos(th1+th2-pi)
         y2 = L1*sin(th1)+L2*sin(th1+th2-pi)
         return (x1,y1,x2,y2)
-    
+
     def scaraInverseKinect(self,pos):
         L1 = self.L1
         L2 = self.L2
@@ -222,9 +222,9 @@ class Scara(QtGui.QGraphicsItem):
         #th1 = th1/pi*180
         #th2 = th2/pi*180
         return (th1,th2)
-    
+
     """
-    the real movement of scara robot 
+    the real movement of scara robot
     """
     def moveOverList(self):
         if self.moveList == None: return
@@ -286,14 +286,14 @@ class Scara(QtGui.QGraphicsItem):
             self.robotSig.emit("pg %d" %(int(moveCnt*100/moveLen)))
         self.printing = False
         self.robotSig.emit("done")
-    
+
     def printPic(self):
         #update pen servo position
         mStr = str(self.ui.linePenUp.text())
         self.penUpPos = int(mStr.split()[1])
         mStr = str(self.ui.linePenDown.text())
         self.penDownPos = int(mStr.split()[1])
-        
+
         while not self.q.empty():
             self.q.get()
         self.printing = True
@@ -301,14 +301,14 @@ class Scara(QtGui.QGraphicsItem):
         self.moveListThread = WorkInThread(self.moveOverList)
         self.moveListThread.setDaemon(True)
         self.moveListThread.start()
-        
+
     def stopPrinting(self):
         self.printing = False
         self.pausing = False
-    
+
     def pausePrinting(self,v):
         self.pausing = v
-    
+
     """
     simulate the actual movement of steppermotor
     """
@@ -334,7 +334,7 @@ class Scara(QtGui.QGraphicsItem):
         print "max step",maxStep
         print "steps",self.deltaStep
         """
-        
+
     def parseEcho(self,msg):
         if "M10" in msg:
             tmp = msg.split()
@@ -363,14 +363,14 @@ class Scara(QtGui.QGraphicsItem):
         print cmd
         self.robotState = BUSYING
         self.sendCmd(cmd)
-    
+
     def G28(self):
         if self.robotState != IDLE: return
         cmd = "G28\n"
         self.sendCmd(cmd)
         self.pos=(-(self.L1+self.L2-0.01),0.0)
         self.th = self.scaraInverseKinect(self.pos)
-    
+
     def M1(self,pos):
         if self.robotState != IDLE: return
         cmd = "M1 %d" %(pos)
@@ -378,41 +378,41 @@ class Scara(QtGui.QGraphicsItem):
         print cmd
         self.robotState = BUSYING
         self.sendCmd(cmd)
-            
+
     def M3(self,auxdelay): # aux delay
         if self.robotState != IDLE: return
         cmd = "M3 %d\n" %(auxdelay)
         self.robotState = BUSYING
         self.sendCmd(cmd)
-    
+
     def M4(self,laserPower,rate=1): # setup laser power
         if self.robotState != IDLE: return
         cmd = "M4 %d\n" %(int(laserPower*rate))
         self.laserPower = laserPower
         self.robotState = BUSYING
         self.sendCmd(cmd)
-    
+
     def M5(self):
         if self.robotState != IDLE: return
         cmd = "M5 A%d B%d M%d N%d\n" %(self.motoADir,self.motoBDir,self.L1,self.L2)
         self.robotState = BUSYING
         self.sendCmd(cmd)
-    
+
     def M10(self): # read robot arm setup and init pos
         cmd = "M10\n"
         self.sendCmd(cmd)
-    
+
     def moveStep(self):
         while True:
             self.th = (self.th[0]+self.deltaStep[0],self.th[1]+self.deltaStep[1])
             (x1,y1,x2,y2) = self.sceraDirectKinect(self.th)
             time.sleep(0.05)
             self.maxStep-=1
-            
+
             if self.maxStep==0 or self.moving==False:
                 self.moving = False
                 return
-        
+
     def moveTo(self,pos,absolute=False):
         if self.moving:
             self.moving = False
@@ -423,11 +423,10 @@ class Scara(QtGui.QGraphicsItem):
         self.moveThread = WorkInThread(self.moveStep)
         self.moveThread.setDaemon(True)
         self.moveThread.start()
-    
+
     def showSetup(self):
         self.robotSetup =  RobotSetupUI(ScaraSetup.Ui_Dialog,self)
-    
-        
-        
-            
-        
+
+
+
+

@@ -1,5 +1,8 @@
 __author__ = 'abos'
 
+IDLE = 0
+BUSYING = 1
+
 class XyRobotModel:
     """
     Saves a robot state
@@ -35,4 +38,3 @@ class XyRobotModel:
         #self.lastx = 9999
         #self.lasty = 9999
 
-    pass

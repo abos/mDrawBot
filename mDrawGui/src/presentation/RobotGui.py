@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ScaraGui.ui'
+# Form implementation generated from reading ui file 'RobotGui.ui'
 #
 # Created: Sat Feb 28 15:14:23 2015
 #      by: PyQt4 UI code generator 4.11.2

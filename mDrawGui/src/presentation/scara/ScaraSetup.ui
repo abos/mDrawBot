@@ -122,7 +122,7 @@
      border-radius: 4px;</string>
     </property>
     <property name="pixmap">
-     <pixmap resource="images.qrc">:/images/stepping_motor-clockwise.png</pixmap>
+     <pixmap resource="../../images.qrc">:/images/stepping_motor-clockwise.png</pixmap>
     </property>
    </widget>
    <widget class="QLabel" name="motoB_CK">
@@ -139,7 +139,7 @@
      border-radius: 4px;</string>
     </property>
     <property name="pixmap">
-     <pixmap resource="images.qrc">:/images/stepping_motor-clockwise.png</pixmap>
+     <pixmap resource="../../images.qrc">:/images/stepping_motor-clockwise.png</pixmap>
     </property>
    </widget>
    <widget class="QLabel" name="motoA_CCK">
@@ -152,7 +152,7 @@
      </rect>
     </property>
     <property name="pixmap">
-     <pixmap resource="images.qrc">:/images/stepping_motor-anticlockwise.png</pixmap>
+     <pixmap resource="../../images.qrc">:/images/stepping_motor-anticlockwise.png</pixmap>
     </property>
    </widget>
    <widget class="QLabel" name="motoB_CCK">
@@ -165,7 +165,7 @@
      </rect>
     </property>
     <property name="pixmap">
-     <pixmap resource="images.qrc">:/images/stepping_motor-anticlockwise.png</pixmap>
+     <pixmap resource="../../images.qrc">:/images/stepping_motor-anticlockwise.png</pixmap>
     </property>
    </widget>
    <widget class="QPushButton" name="pushButton">
@@ -237,6 +237,7 @@
   </widget>
  </widget>
  <resources>
+  <include location="../../images.qrc"/>
   <include location="images.qrc"/>
  </resources>
  <connections/>

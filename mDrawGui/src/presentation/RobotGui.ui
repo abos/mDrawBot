@@ -39,7 +39,7 @@
    <string>Form</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="images.qrc">
+   <iconset resource="../../images.qrc">
     <normaloff>:/images/mDraw.ico</normaloff>:/images/mDraw.ico</iconset>
   </property>
   <property name="styleSheet">
@@ -752,7 +752,7 @@ QSlider::groove:horizontal {
     <string/>
    </property>
    <property name="icon">
-    <iconset resource="images.qrc">
+    <iconset resource="../../images.qrc">
      <normaloff>:/images/scara-UI-setting.png</normaloff>:/images/scara-UI-setting.png</iconset>
    </property>
    <property name="iconSize">
@@ -1460,7 +1460,7 @@ background-color:  rgb(243,243,243);</string>
   </widget>
  </widget>
  <resources>
-  <include location="images.qrc"/>
+  <include location="../../images.qrc"/>
  </resources>
  <connections/>
 </ui>

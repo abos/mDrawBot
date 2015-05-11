@@ -5,9 +5,10 @@ from math import *
 
 from PyQt4.QtCore import *
 
+
 #from presentation.car import CarSetup
 
-from presentation.scara.ScaraGui import *
+from presentation.RobotGui import *
 from presentation.car import CarSetup
 
 
@@ -64,7 +65,7 @@ class RobotSetupUI(QtGui.QWidget):
     def setMotorAcck(self,event):
         self.robot.motoADir = 1
         self.updateUI()
-        
+
     def setMotorBck(self,event):
         self.robot.motoBDir = 0
         self.updateUI()
@@ -79,12 +80,12 @@ class WorkInThread(threading.Thread):
         self._target = target
         self._args = args
         threading.Thread.__init__(self)
- 
+
     def run(self):
         self._target(*self._args)
 
 class CarBot(QtGui.QGraphicsItem):
-    
+
     def __init__(self, scene, ui, parent=None):
         super(CarBot, self).__init__(parent)
         self.robotState = IDLE
@@ -107,10 +108,10 @@ class CarBot(QtGui.QGraphicsItem):
         self.lasty = 9999
         self.ui.label.setText("X(mm)")
         self.ui.label_2.setText("Y(mm)")
-        
+
     def boundingRect(self):
         return  QRectF(0,0,100,100)
-        
+
     def initRobotCanvas(self):
         if self.pathPtr != None:
             self.scene.removeItem(self.pathPtr)
@@ -119,16 +120,16 @@ class CarBot(QtGui.QGraphicsItem):
         self.pathPtr = self.scene.addPath(self.path)
         self.pathPtr.setPen(QtGui.QPen(QtGui.QColor(124, 124, 124)))
         self.ui.labelScale.setText(str(self.scaler))
-        
+
     def paint(self, painter, option, widget=None):
         painter.setBrush(QtCore.Qt.darkGray)
         painter.setRenderHint(QtGui.QPainter.Antialiasing)
-        
+
         x = self.x*self.scaler
         y = -self.y*self.scaler
         #x = self.x
         #y = -self.y
-        
+
         painter.setBrush(QtCore.Qt.darkGray)
         painter.drawEllipse(-5,-5,10,10)
         #painter.setBrush(QtCore.Qt.green)
@@ -137,10 +138,10 @@ class CarBot(QtGui.QGraphicsItem):
         #painter.setPen(pen)
         #painter.drawLine(x,y,x+20*cos(self.dir/180*pi),y-20*sin(self.dir/180*pi))
         img = QtGui.QImage(":/images/caricon.png")
-        painter.translate(x,y);        
+        painter.translate(x,y);
         painter.rotate(-self.dir)
         painter.drawImage(-30,-17,img) # minus the center of image
-        
+
         if x!=self.lastx or y!=self.lasty:
             self.ui.labelXpos.setText("%.2f" %(x))
             self.ui.labelYpos.setText("%.2f" %(-y))
@@ -154,7 +155,7 @@ class CarBot(QtGui.QGraphicsItem):
             self.y+=self.deltaStep[1]
             time.sleep(0.02)
             self.maxStep-=1
-            
+
             if self.maxStep==0 or self.moving==False:
                 self.moving = False
                 return
@@ -164,10 +165,10 @@ class CarBot(QtGui.QGraphicsItem):
             target = (target.x()/self.scaler,-target.y()/self.scaler)
         else:
             target = (target.x(),-target.y())
-        
+
         self.path.lineTo(target[0]+self.robotCent[0], -target[1]+self.robotCent[1])
         self.pathPtr.setPath(self.path)
-        
+
         dx = target[0] - self.x
         dy = target[1] - self.y
         self.dir = atan(dy/dx)/pi*180
@@ -201,7 +202,7 @@ class CarBot(QtGui.QGraphicsItem):
         print cmd
         self.robotState = BUSYING
         self.sendCmd(cmd)
-    
+
     def parseEcho(self,msg):
         if "M10" in msg:
             tmp = msg.split()
@@ -209,7 +210,7 @@ class CarBot(QtGui.QGraphicsItem):
             self.carWidth = int(tmp[2])
             self.initRobotCanvas()
             self.robotState = IDLE
-    
+
     def M1(self,pos):
         if self.robotState != IDLE: return
         cmd = "M1 %d" %(pos)
@@ -217,13 +218,13 @@ class CarBot(QtGui.QGraphicsItem):
         print cmd
         self.robotState = BUSYING
         self.sendCmd(cmd)
-    
+
     def M5(self):
         if self.robotState != IDLE: return
         cmd = "M5 W%d\n" %(self.carWidth)
         self.robotState = BUSYING
         self.sendCmd(cmd)
-    
+
     def G28(self):
         if self.moving:
             self.moving = False
@@ -235,11 +236,11 @@ class CarBot(QtGui.QGraphicsItem):
         if self.robotState != IDLE: return
         cmd = "G28\n"
         self.sendCmd(cmd)
-        
+
     def M10(self): # read robot arm setup and init pos
         cmd = "M10\n"
         self.sendCmd(cmd)
-        
+
     def moveOverList(self):
         if self.moveList == None: return
         moveLen = len(self.moveList)
@@ -284,21 +285,21 @@ class CarBot(QtGui.QGraphicsItem):
         self.q.get()
         self.printing = False
         self.robotSig.emit("done")
-        
+
     def printPic(self):
         #update pen servo position
         mStr = str(self.ui.linePenUp.text())
         self.penUpPos = int(mStr.split()[1])
         mStr = str(self.ui.linePenDown.text())
         self.penDownPos = int(mStr.split()[1])
-        
+
         while not self.q.empty():
             self.q.get()
         self.printing = True
         self.moveListThread = WorkInThread(self.moveOverList)
         self.moveListThread.setDaemon(True)
         self.moveListThread.start()
-        
+
     def stopPrinting(self):
         self.printing = False
 
