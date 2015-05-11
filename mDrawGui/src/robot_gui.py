@@ -13,13 +13,14 @@ from PyQt4.QtCore import *
 from presentation.scara.ScaraGui import *
 from presentation import ParserGUI
 import SvgConverter
-from control.connection import SerialCom, SocketCom
+from control.communication.tcp import SocketCom
+from control.communication.serial import SerialCom
 from control.hex import HexDownloader
 from control.robot.car import CarRobot
 from control.robot.egg import EggBot
 from control.robot.scara import ScaraRobot
 from control.robot.wall import WallRobot
-from control.robot.xy import XYRobot
+from presentation.xy import XYRobot
 from control.svg import SvgParser
 
 

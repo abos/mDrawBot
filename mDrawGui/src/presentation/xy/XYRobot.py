@@ -16,7 +16,7 @@ class WorkInThread(threading.Thread):
         self._target = target
         self._args = args
         threading.Thread.__init__(self)
- 
+
     def run(self):
         self._target(*self._args)
 
@@ -38,15 +38,15 @@ class RobotSetupUI(QtGui.QWidget):
         self.moveThread = WorkInThread(self.updateEndStopThread)
         self.moveThread.setDaemon(False)
         self.moveThread.start()
-    
+
     def updateEndStopThread(self):
         while self.updating:
             time.sleep(0.2)
             self.robot.M11()
-            
+
     def closeEvent(self, event):
         self.updating = False
-    
+
     def updateUI(self):
         self.ui.lineWidth.setText(str(self.robot.width))
         self.ui.lineHeight.setText(str(self.robot.height))
@@ -77,7 +77,7 @@ class RobotSetupUI(QtGui.QWidget):
     def setMotorAcck(self,event):
         self.robot.motoADir = 1
         self.updateUI()
-        
+
     def setMotorBck(self,event):
         self.robot.motoBDir = 0
         self.updateUI()
@@ -85,9 +85,9 @@ class RobotSetupUI(QtGui.QWidget):
     def setMotorBcck(self,event):
         self.robot.motoBDir = 1
         self.updateUI()
-        
+
 class XYBot(QtGui.QGraphicsItem):
-    
+
     def __init__(self, scene, ui, parent=None):
         super(XYBot, self).__init__(parent)
         self.robotState = IDLE
@@ -117,10 +117,10 @@ class XYBot(QtGui.QGraphicsItem):
         self.lasty = 9999
         self.ui.label.setText("X(mm)")
         self.ui.label_2.setText("Y(mm)")
-    
+
     def boundingRect(self):
         return  QRectF(0,0,100,100)
-    
+
     def initRobotCanvas(self):
         self.origin = ((self.scene.width()-self.width)/2,(self.scene.height()-self.height)/2)
         if self.pRect!=None:
@@ -130,26 +130,26 @@ class XYBot(QtGui.QGraphicsItem):
             self.txtPtr=[]
         pen = QtGui.QPen(QtGui.QColor(124, 124, 124))
         self.pRect = self.scene.addRect(self.origin[0],self.origin[1],self.width,self.height,pen)
-        
+
         pTxt = self.scene.addText("O")
         cent = QPointF(self.origin[0]-10,self.origin[1]+self.height)
         pTxt.setPos(cent)
         pTxt.setDefaultTextColor(QtGui.QColor(124, 124, 124))
         self.txtPtr.append(pTxt)
-        
+
         pTxt = self.scene.addText("Y")
         cent = QPointF(self.origin[0]-10,self.origin[1]-10)
         pTxt.setPos(cent)
         pTxt.setDefaultTextColor(QtGui.QColor(124, 124, 124))
         self.txtPtr.append(pTxt)
-        
+
         pTxt = self.scene.addText("X")
         cent = QPointF(self.origin[0]+self.width,self.origin[1]+self.height)
         pTxt.setPos(cent)
         pTxt.setDefaultTextColor(QtGui.QColor(124, 124, 124))
         self.txtPtr.append(pTxt)
         self.ui.labelScale.setText(str(self.scaler))
-    
+
     def parseEcho(self,msg):
         if "M10" in msg:
             tmp = msg.split()
@@ -169,22 +169,22 @@ class XYBot(QtGui.QGraphicsItem):
         elif "M11" in msg:
             t = msg.split()
             self.robotSetup.ui.label_8.setText("X-:%s X+:%s Y-:%s Y+:%s " %(t[1],t[2],t[3],t[4]))
-            
+
 
     def paint(self, painter, option, widget=None):
         painter.setBrush(QtCore.Qt.darkGray)
         painter.setRenderHint(QtGui.QPainter.Antialiasing)
-        
+
         x = self.x+self.origin[0]-self.robotCent[0]
         y = self.y+self.origin[1]-self.robotCent[1]+self.height
-        
+
         #painter.drawText(x-30,y+10,"(%.2f,%.2f)" %(self.x,-self.y))
         pen = QtGui.QPen(QtGui.QColor(124, 124, 124))
         painter.setBrush(QtCore.Qt.darkGray)
         painter.setPen(pen)
         painter.drawLine(x,self.origin[1]-self.robotCent[1],x,self.origin[1]-self.robotCent[1]+self.height)
         painter.drawLine(self.origin[0]-self.robotCent[0],y,self.origin[0]-self.robotCent[0]+self.width,y)
-        
+
         pen = QtGui.QPen(QtGui.QColor(0, 169, 231))
         painter.setBrush(QtGui.QColor(0, 169, 231))
         painter.setPen(pen)
@@ -221,18 +221,18 @@ class XYBot(QtGui.QGraphicsItem):
             self.y+=self.deltaStep[1]
             time.sleep(0.02)
             self.maxStep-=1
-            
+
             if self.maxStep==0 or self.moving==False:
                 self.moving = False
                 break
-        
-        
+
+
     def moveTo(self,pos,absolute=False):
         if self.moving:
             self.moving = False
             self.moveThread.join()
         pos = self.prepareMove(pos,absolute)
-        if pos == None: 
+        if pos == None:
             return
         self.G1(pos[0],pos[1])
         self.moving = True
@@ -256,7 +256,7 @@ class XYBot(QtGui.QGraphicsItem):
         self.sendCmd(cmd)
         self.x = 0
         self.y = 0
-    
+
     def M1(self,pos):
         if self.robotState != IDLE: return
         cmd = "M1 %d" %(pos)
@@ -264,13 +264,13 @@ class XYBot(QtGui.QGraphicsItem):
         print cmd
         self.robotState = BUSYING
         self.sendCmd(cmd)
-    
+
     def M3(self,auxdelay): # aux delay
         if self.robotState != IDLE: return
         cmd = "M3 %d\n" %(auxdelay)
         self.robotState = BUSYING
         self.sendCmd(cmd)
-    
+
     def M4(self,laserPower,rate=1): # setup laser power
         if self.robotState != IDLE: return
         cmd = "M4 %d\n" %(int(laserPower*rate))
@@ -287,11 +287,11 @@ class XYBot(QtGui.QGraphicsItem):
     def M10(self): # read robot arm setup and init pos
         cmd = "M10\n"
         self.sendCmd(cmd)
-        
+
     def M11(self): # read end stop value form xy
         cmd = "M11\n"
         self.sendCmd(cmd)
-        
+
     def moveOverList(self):
         if self.moveList == None: return
         moveLen = len(self.moveList)
@@ -337,7 +337,7 @@ class XYBot(QtGui.QGraphicsItem):
             self.robotSig.emit("pg %d" %(int(moveCnt*100/moveLen)))
         self.printing = False
         self.robotSig.emit("done")
-    
+
     def printPic(self):
         #update pen servo position
         #update pen servo position
@@ -345,7 +345,7 @@ class XYBot(QtGui.QGraphicsItem):
         self.penUpPos = int(mStr.split()[1])
         mStr = str(self.ui.linePenDown.text())
         self.penDownPos = int(mStr.split()[1])
-        
+
         while not self.q.empty():
             self.q.get()
         self.printing = True
@@ -353,18 +353,13 @@ class XYBot(QtGui.QGraphicsItem):
         self.moveListThread = WorkInThread(self.moveOverList)
         self.moveListThread.setDaemon(True)
         self.moveListThread.start()
-    
+
     def stopPrinting(self):
         self.printing = False
         self.pausing = False
-        
+
     def pausePrinting(self,v):
         self.pausing = v
-        
+
     def showSetup(self):
         self.robotSetup =  RobotSetupUI(XySetup.Ui_Form,self)
-        
-        
-        
-        
-        
