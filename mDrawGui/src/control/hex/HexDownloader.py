@@ -2,24 +2,15 @@ import os
 import threading
 import subprocess
 import platform
+from presentation.WorkInThread import WorkInThread
 
 import robot_gui
-
-
-class WorkInThread(threading.Thread):
-    def __init__(self, target, *args):
-        self._target = target
-        self._args = args
-        threading.Thread.__init__(self)
- 
-    def run(self):
-        self._target(*self._args)
 
 
 class HexDownloader():
     def __init__(self, sig):
         self.sig = sig
-        
+
     def loadHexFile(self, filename):
         f = open(filename,"r")
         lines  = f.readlines()
@@ -28,7 +19,7 @@ class HexDownloader():
             print "%x %s" %(addr,data)
         f.close()
         # save hex size
-    
+
     def downloadThread(self,cmd):
         state = 0
         progress = 0
@@ -57,9 +48,9 @@ class HexDownloader():
                 progress+=(c*2)
                 if state>0 and c>0:
                     self.sig.emit("downpg %d" %(progress))
-                
-                
-    
+
+
+
     def startDownloadUno(self, com, hexfile):
         systemType = platform.system()
         if "Windows" in systemType:
@@ -74,7 +65,7 @@ class HexDownloader():
         self.moveListThread = WorkInThread(self.downloadThread,cmd)
         self.moveListThread.setDaemon(True)
         self.moveListThread.start()
-    
+
     def startDownloadLeonardo(self, com, hexfile):
         p = os.getcwd()
         avrdudepath = "%s\\avrdude.exe" %(p)
@@ -83,10 +74,10 @@ class HexDownloader():
         self.moveListThread = WorkInThread(self.downloadThread,cmd)
         self.moveListThread.setDaemon(True)
         self.moveListThread.start()
-        
+
     def serialPost(self, cmd):
         ""
-  
+
     def parseHexLine(self,line):
         cnt = int(line[1:3],16)
         addr = int(line[3:7],16)

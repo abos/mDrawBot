@@ -6,19 +6,11 @@ import subprocess
 import platform
 
 from PyQt4.QtCore import *
+from presentation.WorkInThread import WorkInThread
 
 import robot_gui
 
 
-class WorkInThread(threading.Thread):
-    def __init__(self, target, *args):
-        self._target = target
-        self._args = args
-        threading.Thread.__init__(self)
- 
-    def run(self):
-        self._target(*self._args)
-        
 class SvgConverter(QtGui.QWidget):
     convertSig = pyqtSignal(str)
     def __init__(self,uidialog,bitmapFile,sig):
@@ -37,13 +29,13 @@ class SvgConverter(QtGui.QWidget):
         self.loadBitmap()
         self.robotSig = sig
         self.convertSig.connect(self.parseConvertSig)
-        
+
     def setupUI(self):
         rect = QRectF( self.ui.graphicsView.rect())
         self.scene = QtGui.QGraphicsScene(rect)
         self.ui.graphicsView.setScene(self.scene)
-        
-    
+
+
     def parseConvertSig(self,cmd):
         print "svg sig",cmd
         if "mkbitmap"  in cmd:
@@ -53,17 +45,17 @@ class SvgConverter(QtGui.QWidget):
             print "svg pm",pm
             pBitmap = self.scene.addPixmap(pm)
             pBitmap.setOffset(100,100)
-    
+
     def loadBitmap(self):
         self.scene.clear()
         pBitmap = self.scene.addPixmap(QtGui.QPixmap(self.bitmapFile))
         pBitmap.setOffset(100,100)
         self.scene.setSceneRect(pBitmap.boundingRect())
-    
+
     def thresholdChanged(self):
         th = "%02f" %(float(self.ui.slideThr.value())/100)
         self.ui.labelThr.setText(th)
-    
+
     def convertToSvg(self):
         self.svgout = None
         self.loadBitmap()
@@ -73,8 +65,8 @@ class SvgConverter(QtGui.QWidget):
         #print cmd
         self.moveListThread = WorkInThread(self.potraceBitmap)
         self.moveListThread.setDaemon(True)
-        self.moveListThread.start()  
-    
+        self.moveListThread.start()
+
     def potraceBitmap(self):
         p = os.getcwd()
         systemType = platform.system()
@@ -84,7 +76,7 @@ class SvgConverter(QtGui.QWidget):
             #cmd = "potrace.exe -k %f -t 5 -s -o %s %s" %(th,self.svgout,self.bitmapFile)
             p  = robot_gui.getPkgPath("potrace.exe")
             cmd = "%s -k %f -t 5 -s -o %s %s" %(p,th,self.svgout,self.bitmapFile)
-            
+
         elif "Darwin" in systemType:
             p  = robot_gui.getPkgPath("potrace")
             cmd = "%s -k %f -t 5 -s -o %s %s" %(p,th,self.svgout,self.bitmapFile)
@@ -130,12 +122,11 @@ class SvgConverter(QtGui.QWidget):
         if self.svgout!=None:
             self.robotSig.emit("potrace "+self.svgout)
         self.hide()
-            
-        
-        
-        
-        
-        
-        
-        
-        
+
+
+
+
+
+
+
+

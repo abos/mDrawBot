@@ -1,32 +1,23 @@
 import threading
 import signal, os
 import socket
-
-
-class WorkThread(threading.Thread):
-    def __init__(self, target, *args):
-        self._target = target
-        self._args = args
-        threading.Thread.__init__(self)
- 
-    def run(self):
-        self._target(*self._args)
+from presentation.WorkInThread import WorkInThread
 
 
 class SocketCom():
-    
+
     def __init__(self,echoFun,rxCallback,disconCallback=None):
         self.udp = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
         self.tcp = None
         self.echo = echoFun
         self.rxcb = rxCallback
         self.discb = disconCallback
-        
+
     def refresh(self):
-        self.probThread = WorkThread(self.probeWifi)
+        self.probThread = WorkInThread(self.probeWifi)
         self.probThread.setDaemon(True)
         self.probThread.start()
-        
+
     def probeWifi(self):
         address = ('192.168.1.255', 333)
         self.udp.sendto("hello",address)
@@ -41,11 +32,11 @@ class SocketCom():
             return None
 
     def send(self,msg):
-        try:    
+        try:
             self.tcp.send(msg)
         except socket.error as e:
             print str(e)
-        
+
     def close(self):
         self.connecting = False
         self.tcp.close()
@@ -60,7 +51,7 @@ class SocketCom():
                 if len(data) == 0:
                     self.connecting = False
                     self.discb()
-                    
+
             except Exception as e:
                 if "timed out" not in str(e):
                     print "RX Error:",str(e)

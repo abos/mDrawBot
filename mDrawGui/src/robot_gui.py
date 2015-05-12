@@ -21,6 +21,7 @@ from control.robot.car import CarRobot
 from control.robot.egg import EggBot
 from control.robot.scara import ScaraRobot
 from control.robot.wall import WallRobot
+from presentation.WorkInThread import WorkInThread
 from presentation.xy import XYRobotGui
 from control.svg import SvgParser
 
@@ -46,15 +47,6 @@ DEBUG_ERR = -3
 def millis():
     return int(round(time.time() * 1000))
 
-
-class WorkInThread(threading.Thread):
-    def __init__(self, target, *args):
-        self._target = target
-        self._args = args
-        threading.Thread.__init__(self)
-
-    def run(self):
-        self._target(*self._args)
 
 
 class MainUI(QtGui.QWidget):
