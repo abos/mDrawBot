@@ -24,10 +24,12 @@ logger = logging.getLogger(__name__)
 #motorSelectedStyle = "border: 1px solid rgb(67,67,67);\r\nborder-radius: 4px;\r\n"
 
 
-class XYBot(QtGui.QGraphicsItem, AbstractRobotGui):
+class XYBot(QtGui.QGraphicsObject, AbstractRobotGui):
 
-    def __init__(self, scene, ui, parent=None):
+    def __init__(self, sceneUpdateSig, scene, ui, parent=None):
         super(XYBot, self).__init__()
+
+        self.sceneUpdateSig = sceneUpdateSig
 
         self.robotModel = XyRobotModel()
         self.remoteRobot = RemoteXyRobot(self.robotModel)
@@ -120,6 +122,7 @@ class XYBot(QtGui.QGraphicsItem, AbstractRobotGui):
 
     def robotGoHome(self):
         self.remoteRobot.goHome()
+        self.update()
 
 
     def moveTo(self, position):
@@ -264,9 +267,7 @@ class XYBot(QtGui.QGraphicsItem, AbstractRobotGui):
             elif self.robotModel.y > dy:
                 self.robotModel.y -= deltaStep[1]
 
-            # TODO emit signal
-#            self.parentWidget().parentWidget().repaint()
-            self.update()
+            self.sceneUpdateSig.emit()
             time.sleep(0.02)
 
             if (self.robotModel.x == dx and self.robotModel.y == dy) or not self.moving:

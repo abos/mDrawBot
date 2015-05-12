@@ -7,7 +7,6 @@ import logging
 
 from control.communication.serial import SerialCom
 from presentation.RobotGui import *
-from presentation.WorkInThread import WorkInThread
 from presentation.xy import XYRobotGui
 
 __author__ = 'abos'
@@ -63,17 +62,11 @@ class mDrawMainWindow(QtGui.QWidget):
         # connect scene.update to sceneUpdateSig
         self.sceneUpdateSig.connect(self.scene.update)
 
-        # start refresh thread
-        self.refreshThread = WorkInThread(self.sceneRefresh)
-        self.refreshThread.setDaemon(True)
-        self.refreshThread.start()
-
-
     def initGraphView(self):
         logger.info("initGraphView")
 
         # create new robot UI
-        self.robotGui = XYRobotGui.XYBot(self.scene, self.ui)
+        self.robotGui = XYRobotGui.XYBot(self.sceneUpdateSig, self.scene, self.ui)
 
         scene = self.ui.graphicsView.scene()
         # remove graph reference first
@@ -92,18 +85,6 @@ class mDrawMainWindow(QtGui.QWidget):
         scene.addItem(self.robotGui)
 
         self.robotGui.initRobotCanvas()
-
-    #        self.robot.setPos(cent)
-
-    def sceneRefresh(self):
-        logger.info("sceneRefresh")
-
-        while True:
-            self.sceneUpdateSig.emit()
-            time.sleep(0.2)
-
-        logger.debug("sceneRefresh: finished")
-
 
     def refreshCom(self):
         logger.info("refreshCom")
