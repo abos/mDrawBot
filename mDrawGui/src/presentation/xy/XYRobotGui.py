@@ -1,21 +1,14 @@
-import Queue
 import logging
-from math import *
-
-from PyQt4.QtCore import *
 from PyQt4 import QtCore, QtGui
 
-# from robot_gui import *
+from PyQt4.QtCore import *
 
-# from presentation.scara.ScaraGui import *
-import threading
-import time
 from control.robot.xy.RemoteXyRobot import RemoteXyRobot
 from control.robot.xy.XyRobotModel import XyRobotModel
 from presentation.AbstractRobotGui import AbstractRobotGui
-from presentation.WorkInThread import WorkInThread
 from presentation.xy import XySetup
 from presentation.xy.XySetupDialog import RobotSetupUI
+from presentation.xy.XyUiController import XyUiController
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +18,9 @@ logger = logging.getLogger(__name__)
 
 
 class XYBot(QtGui.QGraphicsObject, AbstractRobotGui):
+    """
+    UI definition for XY robot. No simulation logic involved in this class.
+    """
 
     def __init__(self, sceneUpdateSig, scene, ui, parent=None):
         super(XYBot, self).__init__()
@@ -38,9 +34,7 @@ class XYBot(QtGui.QGraphicsObject, AbstractRobotGui):
         self.scene = scene
         self.ui = ui
 
-        # ongoing simulation
-        self.moving = False
-        self.moveThread = None
+        self.uiController = XyUiController(self.robotModel, self.sceneUpdateSig)
 
         self.robotSetup = None
 
@@ -72,10 +66,8 @@ class XYBot(QtGui.QGraphicsObject, AbstractRobotGui):
         self.ui.label.setText("X(mm)")
         self.ui.label_2.setText("Y(mm)")
 
-
     def boundingRect(self):
         return QRectF(0, 0, 100, 100)
-
 
     def initRobotCanvas(self):
         logger.info("initRobotCanvas");
@@ -121,11 +113,9 @@ class XYBot(QtGui.QGraphicsObject, AbstractRobotGui):
         # fill info box
         self.ui.labelScale.setText(str(self.scaler))
 
-
     def robotGoHome(self):
         self.remoteRobot.goHome()
         self.sceneUpdateSig.emit()
-
 
     def moveTo(self, position):
         """
@@ -141,7 +131,7 @@ class XYBot(QtGui.QGraphicsObject, AbstractRobotGui):
         logger.debug("moveTo relative <%s, %s>", relativeX, relativeY)
 
         self.remoteRobot.moveTo(relativeX, relativeY)
-        self._simulateMovement(relativeX, relativeY)
+        self.uiController.simulateMovement(relativeX, relativeY)
 
 
     # def parseEcho(self,msg):
@@ -197,139 +187,6 @@ class XYBot(QtGui.QGraphicsObject, AbstractRobotGui):
         self.ui.labelXpos.setText("%.2f" % self.robotModel.x)
         self.ui.labelYpos.setText("%.2f" % self.robotModel.y)
 
-    # def prepareMove(self,target,absolute=False):
-    #     if absolute==False:
-    #         target = (target.x(),-target.y())
-    #         target = (target[0]+self.robotCent[0]-self.origin[0],-target[1]-self.origin[1]+self.robotCent[1]-self.height)
-    #     else: # position set by user
-    #         target = (target.x(),target.y())
-    #     dx = target[0] - self.x
-    #     dy = target[1] - self.y
-    #     distance = sqrt(dx*dx+dy*dy)
-    #     maxD = max(abs(dx),abs(dy))*0.5
-    #     maxStep = ceil(maxD)
-    #     self.deltaStep = (dx/maxStep,dy/maxStep)
-    #     self.maxStep = maxStep
-    #     x = target[0]
-    #     y = -target[1]
-    #     print "move to",(x,y),maxStep
-    #     if x<0 or x>self.width or y<0 or y>self.height:
-    #         return None
-    #     return (x,y)
-
-    def _simulateMovement(self, dx, dy, absolute=False):
-        """
-
-        :param dx: relative destination
-        :param dy: relative destination
-        :param absolute:
-        :return:
-        """
-        logger.info("simulateMovement")
-
-        if self.moving and self.moveThread:
-            logger.debug("simulateMovement: robot already moving, wait for stop")
-            self.moving = False
-            self.moveThread.join()
-
-        #        pos = self.prepareMove(pos,absolute)
-
-        # if pos == None:
-        #     return
-
-        xDistance = abs(dx - self.robotModel.x)
-        yDistance = abs(dy - self.robotModel.y)
-
-        maxD = max(xDistance, yDistance) * 0.5
-        maxStep = ceil(maxD)
-        deltaStep = (xDistance / maxStep, yDistance / maxStep)
-        logger.debug("maxD <%s>, <%s>, <%s>, ", maxD, maxStep, deltaStep)
-
-        self.moving = True
-
-        self.moveThread = WorkInThread(self._moveStep, dx, dy, deltaStep)
-        self.moveThread.setDaemon(True)
-        self.moveThread.start()
-
-    def _moveStep(self, dx, dy, deltaStep):
-        while True:
-            # approach to dx
-            if abs(self.robotModel.x - dx) <= deltaStep[0]:
-                self.robotModel.x = dx
-            elif self.robotModel.x < dx:
-                self.robotModel.x += deltaStep[0]
-            elif self.robotModel.x > dx:
-                self.robotModel.x -= deltaStep[0]
-
-            # approach to dy
-            if abs(self.robotModel.y - dy) <= deltaStep[1]:
-                self.robotModel.y = dy
-            elif self.robotModel.y < dy:
-                self.robotModel.y += deltaStep[1]
-            elif self.robotModel.y > dy:
-                self.robotModel.y -= deltaStep[1]
-
-            self.sceneUpdateSig.emit()
-            time.sleep(0.02)
-
-            if (self.robotModel.x == dx and self.robotModel.y == dy) or not self.moving:
-                logger.debug("_moveStep: stopped at <%s, %s>", dx, dy)
-                break
-
-        self.moving = False
-
-
-    # def G1(self,x,y,feedrate=0,auxdelay=None):
-    #     if self.robotState != IDLE: return
-    #     cmd = "G1 X%.2f Y%.2f" %(x,y)
-    #     if auxdelay!=None:
-    #         cmd += " A%d" %(auxdelay)
-    #     cmd += '\n'
-    #     print cmd
-    #     self.robotState = BUSYING
-    #     self.sendCmd(cmd)
-    #
-    # def G28(self):
-    #     if self.robotState != IDLE: return
-    #     cmd = "G28\n"
-    #     self.sendCmd(cmd)
-    #     self.x = 0
-    #     self.y = 0
-    #
-    # def M1(self,pos):
-    #     if self.robotState != IDLE: return
-    #     cmd = "M1 %d" %(pos)
-    #     cmd += '\n'
-    #     print cmd
-    #     self.robotState = BUSYING
-    #     self.sendCmd(cmd)
-    #
-    # def M3(self,auxdelay): # aux delay
-    #     if self.robotState != IDLE: return
-    #     cmd = "M3 %d\n" %(auxdelay)
-    #     self.robotState = BUSYING
-    #     self.sendCmd(cmd)
-    #
-    # def M4(self,laserPower,rate=1): # setup laser power
-    #     if self.robotState != IDLE: return
-    #     cmd = "M4 %d\n" %(int(laserPower*rate))
-    #     self.laserPower = laserPower
-    #     self.robotState = BUSYING
-    #     self.sendCmd(cmd)
-    #
-    # def M5(self):
-    #     if self.robotState != IDLE: return
-    #     cmd = "M5 A%d B%d H%d W%d\n" %(self.motoADir,self.motoBDir,self.height,self.width)
-    #     self.robotState = BUSYING
-    #     self.sendCmd(cmd)
-    #
-    # def M10(self): # read robot arm setup and init pos
-    #     cmd = "M10\n"
-    #     self.sendCmd(cmd)
-    #
-    # def M11(self): # read end stop value form xy
-    #     cmd = "M11\n"
-    #     self.sendCmd(cmd)
     #
     # def moveOverList(self):
     #     if self.moveList == None: return
