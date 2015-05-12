@@ -1,8 +1,8 @@
 from PyQt4.QtCore import *
 
 # noinspection PyUnresolvedReferences
-import time
 import images_rc
+
 import logging
 
 from control.communication.serial import SerialCom
@@ -41,7 +41,7 @@ class mDrawMainWindow(QtGui.QWidget):
         # init scene
         rect = QRectF(self.ui.graphicsView.rect())
         self.scene = QtGui.QGraphicsScene(rect)
-#        item = QtGui.QGraphicsEllipseItem(75, 10, 60, 40)
+        # item = QtGui.QGraphicsEllipseItem(75, 10, 60, 40)
         self.ui.graphicsView.setScene(self.scene)
         self.ui.progressBar.setVisible(False)
         self.ui.labelPic.setVisible(False)
@@ -74,12 +74,12 @@ class mDrawMainWindow(QtGui.QWidget):
         # self.pic = None
         scene.clear()
 
-        rc = scene.sceneRect()
-        cent = QPointF(rc.width() / 2, rc.height() / 2 + 100)
-        #        self.robotCent = cent
+        # rc = scene.sceneRect()
+        # cent = QPointF(rc.width() / 2, rc.height() / 2 + 100)
+        # self.robotCent = cent
         #        self.robot.robotCent =(cent.x(),cent.y())
 
-        logger.debug("initGraphView: robot center <%s>", cent)
+        # logger.debug("initGraphView: robot center <%s>", cent)
         #print "rc",cent
 
         scene.addItem(self.robotGui)
@@ -96,7 +96,7 @@ class mDrawMainWindow(QtGui.QWidget):
         for s in serPorts:
             self.commList[s] = "COM"
             self.ui.portCombo.addItem(s)
-            #self.socket.refresh()
+            # self.socket.refresh()
 
     def graphMouseRelease(self, event):
         logger.info("graphMouseRelease")
@@ -104,7 +104,7 @@ class mDrawMainWindow(QtGui.QWidget):
         self.robotGui.moveTo(event.pos())
 
         # else:
-        #     if self.mouseOverPic:
+        # if self.mouseOverPic:
         #         w = self.picWidth
         #         h = self.picHeight
         #         pos = event.pos()
@@ -136,7 +136,7 @@ class mDrawMainWindow(QtGui.QWidget):
         logger.info("graphMouseMove")
 
         # if self.tempPicRect != None:
-        #     if self.mouseOverPic:
+        # if self.mouseOverPic:
         #         w = self.picWidth
         #         h = self.picHeight
         #         pos = event.pos()
@@ -193,6 +193,6 @@ class mDrawMainWindow(QtGui.QWidget):
         # h = self.picHeight
         # px, py = pos.x(), pos.y()
         # if self.mouseOverPic or self.mouseResizePic:
-        #     pen = QtGui.QPen(QtGui.QColor(0, 169, 231), 3, QtCore.Qt.DashDotLine)
+        # pen = QtGui.QPen(QtGui.QColor(0, 169, 231), 3, QtCore.Qt.DashDotLine)
         #     self.tempPicRect = self.scene.addRect(x, y, w, h, pen)
         #     self.rectBias = (px - x, py - y)

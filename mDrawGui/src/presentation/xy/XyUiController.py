@@ -9,6 +9,10 @@ logger = logging.getLogger(__name__)
 
 
 class XyUiController:
+    """
+    Simulation of robot movement
+    """
+
     def __init__(self, robotModel, sceneUpdateSig):
         self.moving = False
         self.moveThread = None
@@ -41,7 +45,7 @@ class XyUiController:
         maxD = max(xDistance, yDistance) * 0.5
         maxStep = ceil(maxD)
         deltaStep = (xDistance / maxStep, yDistance / maxStep)
-        logger.debug("maxD <%s>, <%s>, <%s>, ", maxD, maxStep, deltaStep)
+        logger.debug("maxD <%s>, maxStep <%s>, deltaStep <%s>, ", maxD, maxStep, deltaStep)
 
         self.moving = True
 
