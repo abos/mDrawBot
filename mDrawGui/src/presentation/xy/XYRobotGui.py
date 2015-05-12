@@ -42,6 +42,8 @@ class XYBot(QtGui.QGraphicsObject, AbstractRobotGui):
         self.moving = False
         self.moveThread = None
 
+        self.robotSetup = None
+
         # origin of robot
         # self.robotCent = None
         # initial params
@@ -122,7 +124,7 @@ class XYBot(QtGui.QGraphicsObject, AbstractRobotGui):
 
     def robotGoHome(self):
         self.remoteRobot.goHome()
-        self.update()
+        self.sceneUpdateSig.emit()
 
 
     def moveTo(self, position):
